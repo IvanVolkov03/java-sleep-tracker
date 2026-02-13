@@ -10,7 +10,7 @@ public enum Chronotype {
     Chronotype(String title) {
         this.title = title;
     }
-    
+
     @Override
     public String toString() {
         return title;
