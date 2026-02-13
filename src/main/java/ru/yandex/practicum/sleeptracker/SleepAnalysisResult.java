@@ -10,7 +10,9 @@ public class SleepAnalysisResult {
         this.value = value;
     }
 
-    public Object getValue() { return value; }
+    public Object getValue() {
+        return value;
+    }
 
     @Override
     public String toString() {
