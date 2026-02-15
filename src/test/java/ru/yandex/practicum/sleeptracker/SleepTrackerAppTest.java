@@ -1,11 +1,18 @@
 package ru.yandex.practicum.sleeptracker;
 
 import org.junit.jupiter.api.Test;
-import ru.yandex.practicum.sleeptracker.functions.*;
-import static org.junit.jupiter.api.Assertions.*;
+import ru.yandex.practicum.sleeptracker.functions.MaxDurationAnalysis;
+import ru.yandex.practicum.sleeptracker.functions.BadSleepCountAnalysis;
+import ru.yandex.practicum.sleeptracker.functions.MinDurationAnalysis;
+import ru.yandex.practicum.sleeptracker.functions.AverageDurationAnalysis;
+import ru.yandex.practicum.sleeptracker.functions.TotalSessionsAnalysis;
+import ru.yandex.practicum.sleeptracker.functions.ChronotypeAnalysis;
+import ru.yandex.practicum.sleeptracker.functions.SleeplessNightsAnalysis;
 import java.util.List;
 import java.util.ArrayList;
 import java.time.LocalDateTime;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class SleepTrackerAppTest {
     // Тесты для Бессонных ночей
@@ -81,80 +88,87 @@ public class SleepTrackerAppTest {
     }
 
     @Test
-    void testTotalSessionsAnalysis() {
+    void shouldCountTotalSessionsInNormalList() {
         TotalSessionsAnalysis analysis = new TotalSessionsAnalysis();
-
-        // Обычный список
         List<SleepingSession> sessions = List.of(
                 createSession(22, 6, SleepQuality.GOOD),
                 createSession(23, 7, SleepQuality.NORMAL)
         );
         assertEquals("Общее количество сессий сна: 2", analysis.apply(sessions).toString());
+    }
 
-        // Пустой список
+    @Test
+    void shouldReturnZeroSessionsForEmptyList() {
+        TotalSessionsAnalysis analysis = new TotalSessionsAnalysis();
         assertEquals("Общее количество сессий сна: 0", analysis.apply(new ArrayList<>()).toString());
     }
 
     @Test
-    void testMinDurationAnalysis() {
+    void shouldFindMinDurationInList() {
         MinDurationAnalysis analysis = new MinDurationAnalysis();
-
-        // Разная длительность (8 часов и 2 часа)
         List<SleepingSession> sessions = List.of(
-                createSession(0, 8, SleepQuality.GOOD), // 480 мин
+                createSession(0, 8, SleepQuality.GOOD),    // 480 мин
                 createSession(14, 16, SleepQuality.NORMAL) // 120 мин
         );
         assertEquals("Минимальная продолжительность сессии (мин): 120", analysis.apply(sessions).toString());
+    }
 
-        // Одна сессия
+    @Test
+    void shouldReturnCorrectMinDurationForSingleSession() {
+        MinDurationAnalysis analysis = new MinDurationAnalysis();
         List<SleepingSession> oneSession = List.of(createSession(10, 11, SleepQuality.BAD));
         assertEquals("Минимальная продолжительность сессии (мин): 60", analysis.apply(oneSession).toString());
     }
 
     @Test
-    void testMaxDurationAnalysis() {
+    void shouldFindMaxDurationInList() {
         MaxDurationAnalysis analysis = new MaxDurationAnalysis();
-
-        // Поиск максимума
         List<SleepingSession> sessions = List.of(
-                createSession(0, 5, SleepQuality.GOOD), // 300 мин
+                createSession(0, 5, SleepQuality.GOOD),  // 300 мин
                 createSession(20, 23, SleepQuality.GOOD) // 180 мин
         );
         assertEquals("Максимальная продолжительность сессии (мин): 300", analysis.apply(sessions).toString());
+    }
 
-        // Пустой список
+    @Test
+    void shouldReturnZeroMaxDurationForEmptyList() {
+        MaxDurationAnalysis analysis = new MaxDurationAnalysis();
         assertEquals("Максимальная продолжительность сессии (мин): 0", analysis.apply(new ArrayList<>()).toString());
     }
 
     @Test
-    void testAverageDurationAnalysis() {
+    void shouldCalculateAverageDurationCorrectly() {
         AverageDurationAnalysis analysis = new AverageDurationAnalysis();
-
-        // Среднее (100 мин + 200 мин) / 2 = 150
+        LocalDateTime now = LocalDateTime.now();
         List<SleepingSession> sessions = List.of(
-                new SleepingSession(LocalDateTime.now(), LocalDateTime.now().plusMinutes(100), SleepQuality.GOOD),
-                new SleepingSession(LocalDateTime.now(), LocalDateTime.now().plusMinutes(200), SleepQuality.GOOD)
+                new SleepingSession(now, now.plusMinutes(100), SleepQuality.GOOD),
+                new SleepingSession(now, now.plusMinutes(200), SleepQuality.GOOD)
         );
         String result = analysis.apply(sessions).toString().replace(",", ".");
-        assertTrue(result.contains("150.00"));
-
-        // Пустой список
-        assertEquals("Средняя продолжительность сессии (мин): 0.00", analysis.apply(new ArrayList<>()).toString().replace(",", "."));
+        assertTrue(result.contains("150.00"), "Ожидалось среднее значение 150.00");
     }
 
     @Test
-    void testBadSleepCountAnalysis() {
-        BadSleepCountAnalysis analysis = new BadSleepCountAnalysis();
+    void shouldReturnZeroAverageDurationForEmptyList() {
+        AverageDurationAnalysis analysis = new AverageDurationAnalysis();
+        String result = analysis.apply(new ArrayList<>()).toString().replace(",", ".");
+        assertEquals("Средняя продолжительность сессии (мин): 0.00", result);
+    }
 
-        // Есть BAD сессии
+    @Test
+    void shouldCountBadQualitySessionsCorrectly() {
+        BadSleepCountAnalysis analysis = new BadSleepCountAnalysis();
         List<SleepingSession> sessions = List.of(
                 createSession(22, 6, SleepQuality.BAD),
                 createSession(23, 7, SleepQuality.GOOD),
                 createSession(1, 4, SleepQuality.BAD)
         );
         assertEquals("Количество сессий с плохим качеством сна: 2", analysis.apply(sessions).toString());
+    }
 
-        // Нет BAD сессий
+    @Test
+    void shouldReturnZeroWhenNoBadQualitySessions() {
+        BadSleepCountAnalysis analysis = new BadSleepCountAnalysis();
         List<SleepingSession> goodSessions = List.of(createSession(22, 6, SleepQuality.NORMAL));
         assertEquals("Количество сессий с плохим качеством сна: 0", analysis.apply(goodSessions).toString());
     }
